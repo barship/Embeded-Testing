@@ -1,0 +1,50 @@
+# coding:utf-8
+CH_232_1.Clear()
+发动机转速.CMD.Value=1
+发动机转速.ZKB.Value=500
+发动机转速.Freq.Value=5000
+车速.CMD.Value=1
+车速.ZKB.Value=500
+车速.Freq.Value=5000
+发动机转速.Write()
+车速.Write()
+monitor=Monitor.数据监控_1
+API.Platform.Monitor.Show(monitor)
+
+def ZH():
+      AD_datas=[100,150,2700,3150,3200]
+      ###################循环执行测试用例##############
+      for arr in AD_datas:
+            燃油液位.Quantity.Value = arr
+            燃油液位.Write()
+            API.Common.Timer.Normal.Sleep(3000)
+      #################传感器信号预期值################
+            b1=(燃油液位.Quantity.Value/1000*2/3.0*10-4)*100/20+15
+            if b1>100 : b1=100
+            elif b1<0 : b1=0
+      ##################串口数据读取及判断############200ms左右
+            COMW.Write()
+            COMR.BlockRead()
+            COM_yewei = COMR.Content.Case2.yewei.Value*100.0/65534
+            print '######################################'
+            print '********************串口读取********************'
+            print '燃油液位 预期值：%.2f；实际值：%.2f'%(b1,COM_yewei)
+            if(abs(COM_yewei-b1)<1):
+                  print'通过RS232串口读取燃油液位正确，测试通过！'
+            else:
+                  print'通过RS232串口读取燃油液位错误，测试不通过！'
+ 
+      ##################CAN口数据读取#################用时：1s左右
+            CH_CAN_1.Clear()
+            for i in range(5):
+                  CAN.BlockRead()
+            CAN_youya = CAN.SW.Case1.youya.Value*4.0/65535
+            print '******************CAN口读取*******************'
+            print '油压 预期值：%.2f；实际值：%.2f'%(b1,CAN_youya)
+            
+            if(abs(CAN_youya-b1)<1):
+                  print'通过CAN口读取油压正确，测试通过！'
+            else:
+                  print'通过CAN口读取油压错误，测试不通过！'
+            API.Common.Timer.Normal.Sleep(5000)
+ZH()
